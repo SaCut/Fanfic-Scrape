@@ -9,6 +9,6 @@ Plans for future versions include eventual bugfixes, adding the possibility to c
 
 # ------Dependencies------
 This script is written in Python 3.
-I also requires beautifulsoup to run. You can install it from command like with:
+I also requires beautifulsoup to run. You can install it from command line with:
 
 $pip install beautifulsoup4

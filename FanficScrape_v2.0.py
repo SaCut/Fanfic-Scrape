@@ -18,8 +18,7 @@ def ClearOutputFolder():
 def main():
 	#------ INIT ------
 	counter = 1
-	# url = str(input('Insert the URL of the thread you want to download: ')))
-	url = 'https://forums.spacebattles.com/threads/burn-up-worm-complete.395526/reader'
+	url = str(input('Insert the URL of the thread you want to download: ')))
 	thread = Thread(url)
 
 	ClearOutputFolder()

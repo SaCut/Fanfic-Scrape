@@ -30,25 +30,25 @@ def main():
 
 			thread.add_headers(chapter_path, thread.title)				# Initialise chapter with headers
 
-		sections = thread.slice_page(page)								# Slice webpage in sections
+		sections = thread.slice_page(page)						# Slice webpage in sections
 		
-		for _, section in enumerate(sections):							# Evaluate each section
+		for _, section in enumerate(sections):						# Evaluate each section
 
 			threadmark = section.find("span", class_="label")			# Find the name of the current chapter
 
 			if threadmark is not None:
 				counter += 1
 
-				thread.add_closers(chapter_path)						# Wrap up previous file
+				thread.add_closers(chapter_path)				# Wrap up previous file
 
-				chapter_path = thread.chapter_path(threadmark, counter)	# Set the name of the next chapter
+				chapter_path = thread.chapter_path(threadmark, counter)		# Set the name of the next chapter
 
 				thread.add_headers(chapter_path, thread.title)			# Write new chapter name to file
 
-			message = thread.pull_content(section)						# Search for a post in each section
+			message = thread.pull_content(section)					# Search for a post in each section
 			if message is not None:
 
-				with open(chapter_path, 'a') as file:					# Write post content to file
+				with open(chapter_path, 'a') as file:				# Write post content to file
 					for content in message.contents:
 						file.write(str(content))
 					

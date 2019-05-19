@@ -50,3 +50,9 @@ class Bar(tk.Entry):
 		if self.get()=='':
 			self.insert('end', default)
 			self.config(fg='grey')
+
+class WrapLabel(tk.Label):
+	''' Label that wraps to size '''
+	def __init__(self, master, **kwargs):
+		tk.Label.__init__(self, master, **kwargs)
+		self.bind('<Configure>', lambda e: self.config(wraplength=self.winfo_width()))

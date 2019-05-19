@@ -1,6 +1,6 @@
 # FANFIC-SCRAPE
 
-A Python script for downloading WHOLE threads of fanfiction and original works from XenForo forums (only tested with SufficientVelocity and SpaceBattles). At this stage, it doesn't yet work for log-in protected forums like questionablequesting.
+A Python script for downloading WHOLE threads of fanfiction and original works from XenForo forums (only tested with SufficientVelocity and SpaceBattles). At this stage, it doesn't yet work for log-in protected forums like Questionable Questing.
 
 # ------Description------
 Fanfic Scrape is a simple executable python script that's intended mainly for downloading "story only" threads, or threads in "reader" mode. It will download a complete thread, find the threadmarks, and use those as chapter titles to create an html file for each chapter.

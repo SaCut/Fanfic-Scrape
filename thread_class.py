@@ -17,15 +17,15 @@ class Thread():
 	title (string): the title of the whole thread
 	first_title (string): the title of the first threadmark. '''
 
-	def __init__(self, url):
-		self.list = self._list_of_URLs(url)
+	def __init__(self, url, mode=None):
+		self.list = self._list_of_URLs(url, mode)
 		self.pages = self._pages_list(self.list)
 		self._check_url(self.pages)
 		self.title = self._thread_title(self.pages)
 		self.first_title = self._first_chapter_title(self.pages)
 
 	# Internal
-	def _list_of_URLs(self, start_url):
+	def _list_of_URLs(self, start_url, mode):
 		''' Takes the URL of the first page of the forum.
 		Returns a list of all the URLs in the thread '''
 		pagelist  = [start_url] #the first URL stays unchanged
@@ -33,6 +33,13 @@ class Thread():
 		soup      = BeautifulSoup(page.text, "lxml")
 		body      = soup.body
 		last_page = int(body.find('div', class_="PageNav")['data-last'])
+
+		if mode is not None:
+			if mode.get() is True:
+				if start_url[-7:]!='/reader':
+					start_url += '/reader'
+				elif start_url[-6:]!='reader':
+					start_url += 'reader'
 
 		if start_url[-6:]!='reader':
 			pagelist += [start_url + 'page-' + str(i + 1) for i in range(1, last_page)] #usually

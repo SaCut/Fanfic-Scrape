@@ -17,7 +17,7 @@ def clear_output_folder():
 	    except Exception as e:
 	        print(e)
 
-def get_fic(url, path='Output/', textbox=None, mode=None): #TODO add reader mode
+def get_fic(url, path='Output/', textbox=None, mode=None):								#TODO add reader mode
 	''' Takes a XenForo thread URL and prints each threadmarked section
 	in an html file. '''
 	
@@ -35,33 +35,33 @@ def get_fic(url, path='Output/', textbox=None, mode=None): #TODO add reader mode
 	for i, page in enumerate(thread.pages):
 
 		if i == 0:
-			chapter_title = thread.first_title											# Set first title
+			chapter_title = thread.first_title								# Set first title
 
 			thread.add_headers(path, chapter_title, thread.title)						# Initialise chapter with headers
 
-		sections = thread.slice_page(page)												# Slice webpage in sections (one each post)
+		sections = thread.slice_page(page)									# Slice webpage in sections (one each post)
 		
-		for _, section in enumerate(sections):											# Evaluate each section
+		for _, section in enumerate(sections):									# Evaluate each section
 
-			threadmark = section.find("span", class_="label")							# Find if the post contains a new chapter
+			threadmark = section.find("span", class_="label")						# Find if the post contains a new chapter
 
 			if threadmark is not None:
 				counter += 1
 
-				thread.add_closers(path, chapter_title)									# Wrap up previous file
+				thread.add_closers(path, chapter_title)							# Wrap up previous file
 
 				chapter_title = thread.chapter_title(threadmark, counter)				# Set the name of the next chapter
 
 				thread.add_headers(path, chapter_title, thread.title)					# Write new chapter name to file
 
-			message = thread.pull_content(section)										# Search for a post in each section
+			message = thread.pull_content(section)								# Search for a post in each section
 			if message is not None:
 
-				with open(path + chapter_title, 'a') as file:							# Write post content to file
+				with open(path + chapter_title, 'a') as file:						# Write post content to file
 					for content in message.contents:
 						file.write(str(content))
 					
-					file.write('<hr noshade="noshade" size="2"/>\n')					# Add a cool separator between posts
+					file.write('<hr noshade="noshade" size="2"/>\n')				# Add a cool separator between posts
 
 	update_text(textbox, '"' + thread.title + '"' + ' finished')
 

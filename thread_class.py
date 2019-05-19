@@ -20,9 +20,11 @@ class Thread():
 	def __init__(self, url):
 		self.list = self._list_of_URLs(url)
 		self.pages = self._pages_list(self.list)
+		self._check_url(self.pages)
 		self.title = self._thread_title(self.pages)
 		self.first_title = self._first_chapter_title(self.pages)
 
+	# Internal
 	def _list_of_URLs(self, start_url):
 		''' Takes the URL of the first page of the forum.
 		Returns a list of all the URLs in the thread '''
@@ -65,8 +67,7 @@ class Thread():
 		Searches for the first occurrence of a threadmark.
 		Calls chapter_title().
 		Returns the threadmark's text content as a title.
-
-
+		
 		Asks the user to input a title if none is found.'''
 		chapter_path = None
 
@@ -80,38 +81,47 @@ class Thread():
 				continue
 		
 		if chapter_path is None:
-			chapter_path = "Output/Chapter_1–{}".format(str(self.title).replace(' ', '_').replace('/', ';'))
+			chapter_path = "Chapter_1–{}".format(str(self.title).replace(' ', '_').replace('/', ';'))
 			return chapter_path
 
-	def chapter_path(self, threadmark_tag, counter):
+	def _check_url(self, pages):
+		''' Checks if the given URL is usable '''
+		for i, page in enumerate(pages):
+			if page.find('li', class_='message') is None:
+				raise TypeError("Unexpected webpage format, unable to find section markers")
+			if page.find("blockquote",class_="messageText SelectQuoteContainer ugc baseHtml") is None:
+				raise TypeError("No posts were found in this thread")
+
+	# External
+	def chapter_title(self, threadmark_tag, counter):
 		''' Takes a bs object (a section from the page) and a counter.
-		Returns its text as a path '''
+		Returns the chapter's name. '''
+		import os
 		label = threadmark_tag.get_text()
 		title = label[14:-3]
-		chapter_path = 'Output/Chapter_{}–{}'.format(counter, title.replace(' ', '_').replace('/', ';'))
-		
-		return chapter_path
+		chapter_title = 'Chapter_{}–{}'.format(counter, title.replace(' ', '_').replace('/', ';'))
+		return chapter_title
 
-	def add_headers(self, chapter_path, title):
-		''' Adds html headers to start of file '''
-		chapter_name = chapter_path.strip('Output/').replace('_', ' ').replace('–', '/')
-		with open(chapter_path, 'w+') as file:
+	def add_headers(self, path, chapter, title):
+		''' Adds html headers at the beginning of the file '''
+		chapter_name = chapter.replace('_', ' ').replace('–', ':').replace(';', '/')
+		with open(path + chapter, 'w+') as file:
 			file.write(
 				'<!DOCTYPE html>\n<html lang="en-US">\n <head>\n'
 				+ '<meta charset="utf-8"/>\n<title>'
 				+ '<h1>' + title + '</h1>'
 				+ '</title>\n</head>\nbody>\n\n'
-				+ '<h2>' + chapter_name.replace('/', ':') + '<h2>'
+				+ '<h2>' + chapter_name + '<h2>'
 				)
 
-	def add_closers(self, chapter):
+	def add_closers(self, path, chapter):
 		''' Add html closers to end of file '''
-		with open(chapter, 'a') as file:
+		with open(path + chapter, 'a') as file:
 			file.write('</body>\n</html>')
 
 	def slice_page(self, page):
 		''' Takes page bs4 object, returns list of XenForo sections (marked as 'li') '''
-		sections = page.find_all('li')
+		sections = page.find_all('li', class_='message')
 		return sections
 
 	def pull_content(self, section):

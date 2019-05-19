@@ -12,3 +12,6 @@ This script is written in Python 3.
 I also requires beautifulsoup to run. You can install it from command line with:
 
 $pip install beautifulsoup4
+
+# ------Run------
+The repository contains a file that can be run directly on linux systems. Also, FanfisScrape.py can be run from terminal.

@@ -18,8 +18,15 @@ def clear_output_folder():
 	        print(e)
 
 def get_fic(url, path='Output/', textbox=None, mode=None):
-	''' Takes a XenForo thread URL and prints each threadmarked section
-	in an html file. '''
+	''' Prints each threadmarked chapter into an html file.
+
+	------ARGUMENTS------
+	url (string): the XenForo url of the thread to be downloaded
+	path (string): the path where the files will be downloaded to
+	textbox (tk.Text): the function prints statuses into this tkinter textbox
+	mode (tk.Boolean):
+		boolean value uset to decide whether to try downloading the thread
+		from its reader mode (reader mode can not exist) '''
 	
 	# Init
 	counter = 1
@@ -35,35 +42,36 @@ def get_fic(url, path='Output/', textbox=None, mode=None):
 	for i, page in enumerate(thread.pages):
 
 		if i == 0:
-			chapter_title = thread.first_title							# Set first title
+			chapter_title = thread.first_title											# Set first title
 
-			thread.add_headers(path, chapter_title, thread.title)					# Initialise chapter with headers
+			thread.add_headers(path, chapter_title, thread.title)				# Initialise chapter with headers
 
-		sections = thread.slice_page(page)								# Slice webpage in sections (one each post)
+		sections = thread.slice_page(page)							# Slice webpage in sections (one each post)
 		
-		for _, section in enumerate(sections):								# Evaluate each section
+		for _, section in enumerate(sections):							# Evaluate each section
 
-			threadmark = section.find("span", class_="label")					# Find if the post contains a new chapter
+			threadmark = section.find("span", class_="label")				# Find if the post contains a new chapter
 
 			if threadmark is not None:
 				counter += 1
 
-				thread.add_closers(path, chapter_title)						# Wrap up previous file
+				thread.add_closers(path, chapter_title)					# Wrap up previous file
 
-				chapter_title = thread.chapter_title(threadmark, counter)			# Set the name of the next chapter
+				chapter_title = thread.chapter_title(threadmark, counter)		# Set the name of the next chapter
 
-				thread.add_headers(path, chapter_title, thread.title)				# Write new chapter name to file
+				thread.add_headers(path, chapter_title, thread.title)			# Write new chapter name to file
 
-			message = thread.pull_content(section)							# Search for a post in each section
+			message = thread.pull_content(section)						# Search for a post in each section
 			if message is not None:
 
-				with open(path + chapter_title, 'a') as file:					# Write post content to file
+				with open(path + chapter_title, 'a') as file:				# Write post content to file
 					for content in message.contents:
 						file.write(str(content))
 					
-					file.write('<hr noshade="noshade" size="2"/>\n')			# Add a cool separator between posts
+					file.write('<hr noshade="noshade" size="2"/>\n')		# Add a cool separator between posts
 
-	update_text(textbox, '"' + thread.title + '"' + ' finished\n\nready')
+	if textbox is not None:
+		update_text(textbox, '"' + thread.title + '"' + ' finished\n\nready')
 
 def get_path(path):
 	''' Updates download path '''
@@ -71,6 +79,7 @@ def get_path(path):
 	path.set(newpath)
 
 def update_text(textbox, string):
+	''' Updates the message inside the textbox widget '''
 	textbox.config(state='normal')
 	textbox.delete('1.0', 'end')
 	textbox.insert('end', string)

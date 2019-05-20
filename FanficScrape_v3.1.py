@@ -42,7 +42,7 @@ def get_fic(url, path='Output/', textbox=None, mode=None):
 	for i, page in enumerate(thread.pages):
 
 		if i == 0:
-			chapter_title = thread.first_title											# Set first title
+			chapter_title = thread.first_title						# Set first title
 
 			thread.add_headers(path, chapter_title, thread.title)				# Initialise chapter with headers
 

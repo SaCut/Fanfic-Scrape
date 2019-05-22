@@ -17,7 +17,7 @@ class Thread():
 	title (string): the title of the whole thread
 	first_title (string): the title of the first threadmark. '''
 
-	def __init__(self, url, mode=None):
+	def __init__(self, url, mode=False):
 		self.list = self._list_of_URLs(url, mode)
 		self.pages = self._pages_list(self.list)
 		self._check_url(self.pages)
@@ -34,12 +34,11 @@ class Thread():
 		body      = soup.body
 		last_page = int(body.find('div', class_="PageNav")['data-last'])
 
-		if mode is not None:
-			if mode.get() is True:
-				if start_url[-7:]!='/reader':
-					start_url += '/reader'
-				elif start_url[-6:]!='reader':
-					start_url += 'reader'
+		if mode:
+			if start_url[-7:]!='/reader':
+				start_url += '/reader'
+			elif start_url[-6:]!='reader':
+				start_url += 'reader'
 
 		if start_url[-6:]!='reader':
 			pagelist += [start_url + 'page-' + str(i + 1) for i in range(1, last_page)] #usually
@@ -72,24 +71,18 @@ class Thread():
 	def _first_chapter_title(self, pages):
 		''' Takes the list of pages in the thread.
 		Searches for the first occurrence of a threadmark.
-		Calls chapter_title().
 		Returns the threadmark's text content as a title.
 		
 		Asks the user to input a title if none is found.'''
-		chapter_path = None
+		chapter_title = None
 
-		for page in pages:
-			try:
-				threadmark = page.find("span", class_="label")
-				chapter_path  = chapter_path(threadmark, 1)
-				return chapter_path
-				break
-			except Exception:
-				continue
-		
-		if chapter_path is None:
-			chapter_path = "Chapter_1–{}".format(str(self.title).replace(' ', '_').replace('/', ';'))
-			return chapter_path
+		try:
+			threadmark = pages[1].find("span", class_="label")
+			chapter_title  = self.title
+			return chapter_title
+		except:
+			chapter_title = self.title
+			return chapter_title
 
 	def _check_url(self, pages):
 		''' Checks if the given URL is usable '''
@@ -100,13 +93,20 @@ class Thread():
 				raise TypeError("No posts were found in this thread")
 
 	# External
-	def chapter_title(self, threadmark_tag, counter):
-		''' Takes a bs object (a section from the page) and a counter.
+	def chapter_title(self, threadmark_tag, counter=None):
+		''' Takes a bs object (a section from the page), possibly a chapter counter.
 		Returns the chapter's name. '''
 		import os
-		label = threadmark_tag.get_text()
-		title = label[14:-3]
-		chapter_title = 'Chapter_{}–{}'.format(counter, title.replace(' ', '_').replace('/', ';'))
+		try:
+			label = threadmark_tag.get_text()
+			title = label[14:-3]
+		except:
+			title = threadmark_tag
+
+		if counter is not None:
+			chapter_title = 'Chapter_{}–{}.html'.format(counter, title.replace(' ', '_').replace('/', ';'))
+		else:
+			chapter_title = title.replace(' ', '_').replace('/', ';') + ".html"
 		return chapter_title
 
 	def add_headers(self, path, chapter, title):
@@ -117,8 +117,8 @@ class Thread():
 				'<!DOCTYPE html>\n<html lang="en-US">\n <head>\n'
 				+ '<meta charset="utf-8"/>\n<title>'
 				+ '<h1>' + title + '</h1>'
-				+ '</title>\n</head>\nbody>\n\n'
-				+ '<h2>' + chapter_name + '<h2>'
+				+ '</title>\n</head>\n<body>\n\n'
+				+ '<h2>' + chapter_name + '</h2>'
 				)
 
 	def add_closers(self, path, chapter):

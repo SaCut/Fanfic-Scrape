@@ -32,14 +32,15 @@ def get_fic(url, path='Output/', textbox=None, mode=False, count=False):
 		beginning of each file name '''
 	
 	# Init
+	first_file = True
 	if count:
-		counter = 1
+		counter = 0
 	else:
 		counter = None
 	try:
 		thread = Thread(url, mode)
 	except Exception as e:
-		print(e)
+		# print(e)
 		if textbox is not None:
 			update_text(textbox, 'There has been a problem.\nPlease try again.')
 		return ''
@@ -48,35 +49,31 @@ def get_fic(url, path='Output/', textbox=None, mode=False, count=False):
 
 	for i, page in enumerate(thread.pages):
 
-		if i == 0:
-			chapter_title = thread.chapter_title(thread.first_title, counter)			# Set first title
+		if i==0:
+			chapter_title = thread.chapter_title(thread.first_title, counter)					# Set first chapter title
 
-			thread.add_headers(path, chapter_title, thread.title)					# Initialise chapter with headers
-
-		sections = thread.slice_page(page)								# Slice webpage in sections (one each post)
+		sections = thread.slice_page(page)										# Slice webpage in sections (one each post)
 		
-		for _, section in enumerate(sections):								# Evaluate each section
+		for section in sections:											# Evaluate each section
 
-			threadmark = section.find("span", class_="label")					# Find if the post contains a new chapter
+			threadmark = section.find("span", class_="label")							# Find if the post contains a new chapter
+			message = thread.pull_content(section)									# Find if the post contains a message
 
 			if threadmark is not None:
 				if count:
 					counter += 1
+				first_file = False
 
-				thread.add_closers(path, chapter_title)						# Wrap up previous file
-
-				chapter_title = thread.chapter_title(threadmark, counter)			# Set the name of the next chapter
-
-				thread.add_headers(path, chapter_title, thread.title)				# Write new chapter name to file
-
-			message = thread.pull_content(section)							# Search for a post in each section
 			if message is not None:
 
-				with open(path + chapter_title, 'a') as file:					# Write post content to file
-					for content in message.contents:
-						file.write(str(content))
-					
-					file.write('<hr/>\n')							# Add a separator between posts
+				if first_file==True:
+					thread.add_closers(path, chapter_title)							# Wrap up previous file
+
+				chapter_title = thread.chapter_title(threadmark, counter)					# Set the name of the next chapter
+				
+				thread.add_headers(path, chapter_title, thread.title)						# Open new file with new name
+
+				thread.add_content(path, chapter_title, message)						# Add content of message to file
 
 	if textbox is not None:
 		update_text(textbox, '"' + thread.title + '"' + ' finished\n\n... Ready')
@@ -93,7 +90,7 @@ def update_text(textbox, string):
 	textbox.insert('end', string)
 	textbox.config(state='disabled')
 
-def main():
+def window():
 
 	#------ INIT ------
 	# Window
@@ -181,4 +178,4 @@ def main():
 	window.mainloop()
 
 if __name__=='__main__':
-	main()
+	window()

@@ -70,17 +70,17 @@ class Thread():
 
 	def _first_chapter_title(self, pages):
 		''' Takes the list of pages in the thread.
-		Searches for the first occurrence of a threadmark.
+		Searches for the first page for a threadmark.
 		Returns the threadmark's text content as a title.
 		
 		Asks the user to input a title if none is found.'''
 		chapter_title = None
+		threadmark = pages[0].find("span", class_="label")
 
-		try:
-			threadmark = pages[1].find("span", class_="label")
-			chapter_title  = self.title
+		if threadmark is not None:
+			chapter_title  = threadmark.get_text()[14:-3]
 			return chapter_title
-		except:
+		else:
 			chapter_title = self.title
 			return chapter_title
 
@@ -104,20 +104,20 @@ class Thread():
 			title = threadmark_tag
 
 		if counter is not None:
-			chapter_title = 'Chapter_{}–{}.html'.format(counter, title.replace(' ', '_').replace('/', ';'))
+			chapter_title = 'Chapter_{}–{}'.format(counter, title.replace(' ', '_').replace('/', '×'))
 		else:
 			chapter_title = title.replace(' ', '_').replace('/', ';')
 		return chapter_title
 
 	def add_headers(self, path, chapter, title):
 		''' Adds html headers at the beginning of the file '''
-		chapter_name = chapter.replace('_', ' ').replace('–', ':').replace(';', '/')
+		chapter_name = chapter.replace('_', ' ').replace('–', ':').replace('×', '/')
 		with open(path + chapter + '.html', 'w+') as file:
 			file.write(
 				'<!DOCTYPE html>\n<html lang="en-US">\n <head>\n'
-				+ '<meta charset="utf-8"/>\n<title>'
-				+ '<h1>' + title + '</h1>'
-				+ '</title>\n</head>\n<body>\n\n'
+				+ '<meta charset="utf-8"/>\n'
+				+ '<title>' + title + '</title>\n'
+				+ '</head>\n<body>\n\n'
 				+ '<h2>' + chapter_name + '</h2>'
 				)
 
@@ -132,6 +132,13 @@ class Thread():
 		return sections
 
 	def pull_content(self, section):
-		''' Takes a user message, returns its text content '''
+		''' Takes a user post, returns its text content '''
 		content = section.find("blockquote", class_="messageText SelectQuoteContainer ugc baseHtml")
 		return content
+
+	def add_content(self, path, chapter, body):
+		''' Adds the contents of the post to file '''
+		with open(path + chapter + '.html', 'a') as file:
+			for content in body.contents:
+				file.write(str(content))
+			file.write('<hr/>\n')

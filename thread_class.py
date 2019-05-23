@@ -106,13 +106,13 @@ class Thread():
 		if counter is not None:
 			chapter_title = 'Chapter_{}–{}.html'.format(counter, title.replace(' ', '_').replace('/', ';'))
 		else:
-			chapter_title = title.replace(' ', '_').replace('/', ';') + ".html"
+			chapter_title = title.replace(' ', '_').replace('/', ';')
 		return chapter_title
 
 	def add_headers(self, path, chapter, title):
 		''' Adds html headers at the beginning of the file '''
 		chapter_name = chapter.replace('_', ' ').replace('–', ':').replace(';', '/')
-		with open(path + chapter, 'w+') as file:
+		with open(path + chapter + '.html', 'w+') as file:
 			file.write(
 				'<!DOCTYPE html>\n<html lang="en-US">\n <head>\n'
 				+ '<meta charset="utf-8"/>\n<title>'
@@ -123,7 +123,7 @@ class Thread():
 
 	def add_closers(self, path, chapter):
 		''' Add html closers to end of file '''
-		with open(path + chapter, 'a') as file:
+		with open(path + chapter + '.html', 'a') as file:
 			file.write('</body>\n</html>')
 
 	def slice_page(self, page):

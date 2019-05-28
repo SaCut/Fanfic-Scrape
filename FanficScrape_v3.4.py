@@ -10,33 +10,36 @@ def clear_output_folder():
 	import os
 
 	for file in os.listdir('Output'):
-	    file_path = os.path.join('Output', file)
-	    try:
-	        if os.path.isfile(file_path):
-	            os.unlink(file_path)
-	    except Exception as e:
-	        print(e)
+		file_path = os.path.join('Output', file)
+		try:
+			if os.path.isfile(file_path):
+				os.unlink(file_path)
+		except Exception as e:
+			print(e)
 
-def get_fic(url, path='Output/', textbox=None, mode=False, count=False):
+def get_fic(url, path='Output/', textbox=None, mode=False, count=False, pretty=True):
 	''' Prints each threadmarked chapter into an html file.
 
 	------ARGUMENTS------
 	url (string): the XenForo url of the thread to be downloaded
 	path (string): the path where the files will be downloaded to
 	textbox (tk.Text): the function prints statuses into this tkinter textbox
-	mode (Boolean):
+	mode (boolean):
 		boolean value uset to decide whether to try downloading the thread
 		from its reader mode (reader mode could not work for centain threads)
 	count (boolean):
 		boolean value to decide whether to add a chapter counter to the
-		beginning of each file name '''
+		beginning of each file name
+	pretty (boolean):
+		boolean value used to decide wether to make the XenForo standard html
+		more ebook-freindly '''
 	
 	# Init
-	first_file = True
 	if count:
 		counter = 0
 	else:
 		counter = None
+
 	try:
 		thread = Thread(url, mode)
 	except Exception as e:
@@ -46,37 +49,39 @@ def get_fic(url, path='Output/', textbox=None, mode=False, count=False):
 		return ''
 	else:
 		clear_output_folder()
+		chapter_title = thread.chapter_title(thread.first_title, counter)
 
 	for i, page in enumerate(thread.pages):
 
-		if i==0:
-			chapter_title = thread.chapter_title(thread.first_title, counter)					# Set first chapter title
-
-		sections = thread.slice_page(page)										# Slice webpage in sections (one each post)
+		sections = thread.slice_page(page)								# Slice webpage in sections (one each post)
 		
-		for section in sections:											# Evaluate each section
+		for section in sections:									# Evaluate each section
 
-			threadmark = section.find("span", class_="label")							# Find if the post contains a new chapter
-			message = thread.pull_content(section)									# Find if the post contains a message
+			threadmark = section.find("span", class_="label")					# Find if the post contains a new chapter
+			message = thread.pull_content(section)							# Find if the post contains a message
 
 			if threadmark is not None:
 				if count:
 					counter += 1
-				first_file = False
+
+				if chapter_title is not None:
+					thread.add_closers(path, chapter_title)					# Wrap up previous file
+					if pretty:
+						thread.prettify(path, chapter_title)
+
+				chapter_title = thread.chapter_title(threadmark, counter)			# Set the name of the next chapter
+				
+				thread.add_headers(path, chapter_title, thread.title)				# Open new file with new name
 
 			if message is not None:
+				thread.add_content(path, chapter_title, message)				# Add content of message to file
 
-				if first_file==True:
-					thread.add_closers(path, chapter_title)							# Wrap up previous file
-
-				chapter_title = thread.chapter_title(threadmark, counter)					# Set the name of the next chapter
-				
-				thread.add_headers(path, chapter_title, thread.title)						# Open new file with new name
-
-				thread.add_content(path, chapter_title, message)						# Add content of message to file
+	thread.add_closers(path, chapter_title)									# Close last file
+	if pretty:
+		thread.prettify(path, chapter_title)
 
 	if textbox is not None:
-		update_text(textbox, '"' + thread.title + '"' + ' finished\n\n... Ready')
+		update_text(textbox, '"' + thread.title + '"' + ' finished ...\n\nReady')
 
 def get_path(path):
 	''' Updates download path '''
@@ -91,16 +96,16 @@ def update_text(textbox, string):
 	textbox.config(state='disabled')
 
 def window():
-
 	#------ INIT ------
 	# Window
-	window = gui.Window(title='Fanfic Scrape', width=700, height=450, minwidth=600, minheight=450)
+	window = gui.Window(title='Fanfic Scrape', width=700, height=480, minwidth=600, minheight=480)
 	
 	# Misc
 	url = tk.StringVar(value='Insert the address here')
 	path = tk.StringVar(value='Output/')
-	mode = tk.BooleanVar(value=False)
-	count = tk.BooleanVar(value=False)
+	mode = tk.BooleanVar()
+	count = tk.BooleanVar()
+	pretty = tk.BooleanVar()
 
 	#----- WINDOW SETUP ------
 	base = tk.Frame(window)
@@ -144,11 +149,15 @@ def window():
 	numbers.pack(anchor='w')
 
 	reader = tk.Checkbutton(options,
-		text="Try to read thread in reader mode (without non-threadmarked posts)",
-		variable=mode, onvalue=True, offvalue=False)
+		text="Try reader mode: avoids user comments and all non-threadmarked posts\n(breaks story-only threads)",
+		variable=mode, onvalue=True, offvalue=False, height=2, justify='left')
 	reader.pack(anchor='w')
 
-	#TODO add options
+	prettify = tk.Checkbutton(options,
+		text="Try to improve the html of the file (beta)",
+		variable=pretty, onvalue=True, offvalue=False)
+	prettify.select()
+	prettify.pack(anchor='w')
 
 	# Text output
 	out_frame = tk.Frame(base)
@@ -172,7 +181,8 @@ def window():
 			path=path.get(),
 			textbox=feedback,
 			mode=mode.get(),
-			count=count.get()))
+			count=count.get(),
+			pretty=pretty.get()))
 	fetch_button.pack(fill='x')
 
 	window.mainloop()

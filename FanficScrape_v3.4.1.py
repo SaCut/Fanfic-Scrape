@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import time
 import tkinter as tk
 import gui_class as gui
 from thread_class import Thread
@@ -40,13 +41,14 @@ def get_fic(url, path='Output/', textbox=None, mode=False, count=False, pretty=T
 	else:
 		counter = None
 
+	time1 = time.time()
+
 	try:
 		thread = Thread(url, mode)
 	except Exception as e:
-		# print(e)
 		if textbox is not None:
-			update_text(textbox, 'There has been a problem.\nPlease try again.')
-		return ''
+			update_text(textbox, 'There has been a problem.\nPlease try again.\n\n{}'.format(e))
+		return 0
 	else:
 		clear_output_folder()
 		chapter_title = thread.chapter_title(thread.first_title, counter)
@@ -80,8 +82,10 @@ def get_fic(url, path='Output/', textbox=None, mode=False, count=False, pretty=T
 	if pretty:
 		thread.prettify(path, chapter_title)
 
+	time2 = time.time()
+
 	if textbox is not None:
-		update_text(textbox, '"' + thread.title + '"' + ' finished ...\n\nReady')
+		update_text(textbox, '"' + thread.title + '"' + ' finished in {:.2f}ms ...\n\nReady'.format(time2-time1))
 
 def get_path(path):
 	''' Updates download path '''
@@ -151,6 +155,7 @@ def window():
 	reader = tk.Checkbutton(options,
 		text="Try reader mode: avoids user comments and all non-threadmarked posts\n(breaks story-only threads)",
 		variable=mode, onvalue=True, offvalue=False, height=2, justify='left')
+	reader.select()
 	reader.pack(anchor='w')
 
 	prettify = tk.Checkbutton(options,

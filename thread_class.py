@@ -21,19 +21,18 @@ class Thread():
 	def __init__(self, url, mode=False):
 		self.list = self._list_of_URLs(url, mode)
 		self.pages = self._pages_list(self.list)
-		# self.pages = pagelist
 		self._check_url(self.pages)
 		self.title = self._thread_title(self.pages)
 		self.first_title = self._first_chapter_title(self.pages)
 
 	# Internal
-	def _list_of_URLs(self, start_url, mode):
+	def _list_of_URLs(self, start_url, mode=False):
 		''' Takes the URL of the first page of the forum.
 		Returns a list of all the URLs in the thread '''
 		pagelist  = [start_url] #the first URL stays unchanged
 		page      = requests.get(start_url)
 		soup      = BeautifulSoup(page.text, 'lxml')
-		body      = soup.body
+		body      = soup.html
 		last_page = int(body.find('div', class_="PageNav")['data-last'])
 
 		if mode==True:
@@ -48,8 +47,6 @@ class Thread():
 
 		if start_url[-7:]!='/reader' and start_url[-1]=='/':
 			pagelist += [start_url + 'page-' + str(i + 1) for i in range(1, last_page)] #usually
-		elif start_url[-1]!='/':
-			pagelist += [start_url + '/page-' + str(i + 1) for i in range(1, last_page)]
 		else:
 			pagelist += [start_url + '?page=' + str(i + 1) for i in range(1, last_page)] #if the URL points to reader mode
 
@@ -60,11 +57,16 @@ class Thread():
 		Returns the pages as bs4 objects '''
 		pages = []
 
-		for i, page in enumerate(URLs):
-			html = requests.get(page)
+		if isinstance(pages, list):
+			for i, page in enumerate(URLs):
+				html = requests.get(page)
+				soup = BeautifulSoup(html.text, 'lxml')
+				pages.append(soup.html)
+		else:
+			html = requests.get(pages)
 			soup = BeautifulSoup(html.text, 'lxml')
-			pages.append(soup.body)
-		
+			pages.append(soup.html)
+	
 		return pages
 
 	def _fix_title(self, title, file_mode=True):
@@ -91,8 +93,12 @@ class Thread():
 	def _thread_title(self, pages):
 		''' Takes the list of pages in the thread.
 		Returns the title of the thread '''
-		for page in pages:
-			thread_title = page.find('h1')
+		if isinstance(pages, list):
+			for page in pages:
+				thread_title = page.find('h1')
+				thread_title = thread_title.get_text()
+		else:
+			thread_title = pages.find('h1')
 			thread_title = thread_title.get_text()
 		
 		return thread_title
@@ -104,7 +110,11 @@ class Thread():
 		
 		Asks the user to input a title if none is found.'''
 		chapter_title = None
-		threadmark = pages[0].find("span", class_="label")
+
+		if isinstance(pages, list):
+			threadmark = pages[0].find('span', class_='label')
+		else:
+			threadmark = pages.find('span', class_='label')
 
 		if threadmark is not None:
 			return None
@@ -114,10 +124,16 @@ class Thread():
 
 	def _check_url(self, pages):
 		''' Checks if the given URL is usable '''
-		for page in pages:
-			if page.find('li', class_="message") is None:
+		if isinstance(pages, list):
+			for page in pages:
+				if page.find('li', class_="message") is None:
+					raise TypeError("Unexpected webpage format, unable to find section markers")
+				if page.find("blockquote", class_="messageText SelectQuoteContainer ugc baseHtml") is None:
+					raise TypeError("No posts were found in this thread")
+		else:
+			if pages.find('li', class_="message") is None:
 				raise TypeError("Unexpected webpage format, unable to find section markers")
-			if page.find("blockquote",class_="messageText SelectQuoteContainer ugc baseHtml") is None:
+			if pages.find("blockquote", class_="messageText SelectQuoteContainer ugc baseHtml") is None:
 				raise TypeError("No posts were found in this thread")
 
 	# External
@@ -202,6 +218,11 @@ class Thread():
 			text = re.sub('<p><{}></{}></p>'.format(i, i), '', text)
 			text = re.sub(r'<p><{}.*> </{}></p>'.format(i, i), '', text)
 
+		# for i in tags:
+		# 	for j in re.findall(r'<p>.*[^<>]</{}>'.format(i), text):
+		# 		if '<i'.format(i) not in j:
+		# 			text = re.sub('<p>', '<p><{}>'.format(i), text)
+
 		for i in tags:
 			text = re.sub('<{}><{}>'.format(i, i), '', text)
 			if i!='span':
@@ -219,3 +240,4 @@ class Thread():
 
 		with open(path + chapter + '.html', 'w') as file:
 			file.write(text)
+
